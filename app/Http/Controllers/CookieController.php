@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cookie;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class CookieController extends Controller
 {
@@ -44,16 +46,35 @@ class CookieController extends Controller
         
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'image' => 'mimetypes:image/jpeg,image/png,image/jpg,image/gif,image/webp|max:2048',
+        ]);
+        
+        if ($validator->fails()) {
+            return redirect()->route('cookie.index')
+                ->with('error', 'Validation failed')
+                ->withErrors($validator)
+                ->withInput();
+        }        
+    
         $newCookie = new Cookie;
         $newCookie->title = $request->title;
         $newCookie->description = $request->description;
+    
+        // Handle image upload and save the image path
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('public/images');
+            $newCookie->image = str_replace('public/', 'storage/', $imagePath);
+        }
+    
         $newCookie->save();
-        return redirect('/cookie');
+    
+        return redirect()->route('cookie.index')
+            ->with('success', 'Cookie Created');
     }
 
     /**
@@ -61,46 +82,102 @@ class CookieController extends Controller
      */
     public function create_cookie(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'status' => 'error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
         $newCookie = new Cookie;
         $newCookie->title = $request->title;
         $newCookie->description = $request->description;
         $newCookie->save();
+
         return response()->json([
-            'message'   =>  'Cookie Create',
-            'status'    =>  'success',
-            'cookies'   =>  $newCookie
+            'message' => 'Cookie Created',
+            'status' => 'success',
+            'new_cookie' => $newCookie
         ]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit($id)
     {
-        //
+        $cookie = Cookie::find($id);
+        return view('edit_cookie', [
+            'cookie' => $cookie,
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+
+    public function update(Request $request, $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'image' => 'mimetypes:image/jpeg,image/png,image/jpg,image/gif,image/webp|max:2048',
+        ]);
+    
+        if ($validator->fails()) {
+            return redirect()->route('cookie.edit', $id)
+                ->with('error', 'Validation failed')
+                ->withErrors($validator)
+                ->withInput();
+        }
+    
+        $cookie = Cookie::find($id);
+    
+        if (!$cookie) {
+            return redirect()->route('cookie.index')
+                ->with('error', 'Cookie not found');
+        }
+    
+        $cookie->title = $request->title;
+        $cookie->description = $request->description;
+    
+        // Handle image upload and update the image path
+        if ($request->hasFile('image')) {
+            // Delete the old image (if it exists)
+            if ($cookie->image) {
+                Storage::delete(str_replace('storage/', 'public/', $cookie->image));
+            }
+    
+            $imagePath = $request->file('image')->store('public/images');
+            $cookie->image = str_replace('public/', 'storage/', $imagePath);
+        }
+    
+        $cookie->save();
+    
+        return redirect()->route('cookie.index')
+            ->with('success', 'Cookie Updated');
     }
+    
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        $cookie = Cookie::find($id);
+
+        if ($cookie) {
+            $cookie->delete();
+            session()->flash('success', 'Cookie deleted successfully');
+        } else {
+            session()->flash('error', 'Cookie not found');
+        }
+
+        return redirect('/cookie');
     }
+
 }
