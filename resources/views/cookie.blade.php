@@ -9,7 +9,7 @@
         @endif
 
         @if(session('error'))
-            <div class="bg-red-200 p-4 rounded-md mb-4">
+            <div class="bg-red-200 p-4 rounded-sm mb-4">
                 {{ session('error') }}
             </div>
         @endif
@@ -21,7 +21,7 @@
             @foreach($cookies as $cookie)
                 <li class="flex justify-between gap-x-6 py-5">
                     <div class="flex min-w-0 gap-x-4">
-                    <img class="h-12 w-12 flex-none rounded-full bg-gray-50 object-cover" src="{{asset($cookie->image)}}" alt="">
+                    <img class="h-12 w-12 flex-none rounded-full bg-gray-50 object-cover" src="{{ asset('storage/' . $cookie->image) }}" alt="">
                     <div class="min-w-0 flex-auto">
                         <p class="text-sm font-semibold leading-6 text-gray-900">{{ $cookie->title }}</p>
                         <p class="mt-1 truncate text-xs leading-5 text-gray-500">{{ $cookie->description }}</p>
@@ -40,6 +40,7 @@
                     </div>
                 </li>
             @endforeach
+            {{ $cookies->links() }}
         </ul>
 
         <br>

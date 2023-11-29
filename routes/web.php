@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CookieController;
+use App\Http\Controllers\AuthController;
+use App\Http\Middleware\JWTAuth;
 /*
 |--------------------------------------------------------------------------
 | Web Routes

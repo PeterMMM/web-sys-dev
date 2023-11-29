@@ -31,6 +31,7 @@ Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 
 
+Route::get("/test_cookies",[CookieController::class,'get_cookies']);
 
 Route::group(['middleware' => 'jwt'], function () {
     Route::get("/cookies",[CookieController::class,'get_cookies']);

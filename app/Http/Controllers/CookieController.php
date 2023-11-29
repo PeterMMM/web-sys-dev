@@ -15,7 +15,7 @@ class CookieController extends Controller
     public function index()
     {
         // Get Cookies List
-        $cookies = Cookie::get();
+        $cookies = Cookie::paginate(5);
         // dd($cookies);
         return view('cookie',[
             'best_cookie'=>'Snickerdoodles',

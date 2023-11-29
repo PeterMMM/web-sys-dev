@@ -56,6 +56,13 @@ return [
             'throw' => false,
         ],
 
+        'admin' => [
+            'driver' =>'local',
+            'root' => public_path('storage'),
+            'visibility' =>'public',
+            'url' => env('APP_URL').'/storage',
+        ], 
+
     ],
 
     /*
