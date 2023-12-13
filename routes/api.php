@@ -35,6 +35,7 @@ Route::get("/test_cookies",[CookieController::class,'get_cookies']);
 
 Route::group(['middleware' => 'jwt'], function () {
     Route::get("/cookies",[CookieController::class,'get_cookies']);
+    Route::get('/cookies/{id}', [CookieController::class, 'show'])->name('cookies.show');
     Route::post("/cookies",[CookieController::class,'create_cookie']);
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

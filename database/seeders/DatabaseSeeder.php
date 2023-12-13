@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\CookieCategory;
+use App\Models\Cookie;
 
 class DatabaseSeeder extends Seeder
 {
@@ -18,5 +20,10 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+        $this->call([
+            CookieCategory::class,
+            Cookie::class,
+        ]);
+
     }
 }

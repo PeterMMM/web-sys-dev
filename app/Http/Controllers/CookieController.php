@@ -6,9 +6,17 @@ use Illuminate\Http\Request;
 use App\Models\Cookie;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Predis\Client;
 
 class CookieController extends Controller
 {
+    private $redis;
+
+    public function __construct()
+    {
+        $this->redis = new Client();
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -24,16 +32,109 @@ class CookieController extends Controller
     }
 
     /**
+     * Show the detail page for the specified resource.
+     */
+    public function show($id)
+    {
+        $cookie = Cookie::find($id);
+
+        if (!$cookie) {
+            return response()->json(['error' => 'Cookie not found'], 404);
+        }
+        // Increase view count using Redis
+        $this->incrementViewCount($cookie);
+        $viewCount = $this->getViewCount($cookie);
+
+        return response()->json([
+            'message'   =>  'Cookie Detail',
+            'status'    =>  'success',
+            'cookies'   =>  $cookie,
+            'view_count'   =>  $viewCount
+        ]);
+    }
+
+    /**
+     * Increment the view count of a cookie using Redis.
+     */
+    private function incrementViewCount(Cookie $cookie)
+    {
+        $redisKey = "popular_cookies";
+        $cookieId = $cookie->id;
+
+        // Use pipeline for atomicity
+        $this->redis->pipeline(function ($pipe) use ($redisKey, $cookieId) {
+            // Increment the view count
+            $pipe->zincrby($redisKey, 1, $cookieId);
+        });
+    }
+    
+    /**
+     * Get the view count of a cookie using Predis.
+     */
+    private function getViewCount(Cookie $cookie)
+    {
+        $redisKey = "popular_cookies";
+        $cookieId = $cookie->id;
+
+        // Get the view count
+        $viewCount = $this->redis->zscore($redisKey, $cookieId);
+
+        return $viewCount ?? 0;
+    }
+
+    /**
+     * Get the top 3 most popular cookies based on views using Predis.
+     */
+    private function getTop3PopularCookies()
+    {
+        $redisKey = "popular_cookies";
+
+        // Get all cookies with their view counts
+        $cookiesWithViews = $this->redis->zrevrange($redisKey, 0, -1, 'WITHSCORES');
+
+        // Filter out cookies with zero views
+        $cookiesWithViews = array_filter($cookiesWithViews, function ($viewCount) {
+        return $viewCount > 0;
+        });
+        
+        // Take only the top 3 cookies
+        $top3Cookies = array_slice($cookiesWithViews, 0, 3, true);
+
+        // Get the actual Cookie models for the top 3 cookies
+        $cookieIds = array_keys($top3Cookies);
+        $top3Cookies = collect();
+        foreach ($cookieIds as $cookieId) {
+            $cookie = Cookie::find($cookieId);
+            if ($cookie) {
+                $top3Cookies->push($cookie);
+            }
+        }
+        // Attach the view count to each cookie
+        $top3CookiesWithViews = [];
+        foreach ($top3Cookies as $cookie) {
+            $cookieId = $cookie->id;
+            $viewCount = $cookiesWithViews[$cookieId] ?? 0;
+            $top3CookiesWithViews[] = ['cookie' => $cookie, 'views' => $viewCount];
+        }
+
+        return $top3CookiesWithViews;
+    }
+
+
+    /**
      * Return Cookies List API
      * 
      * @return JSON $cookies
      */
     public function get_cookies()
     {
-        $cookies = Cookie::get();
+        $cookies = Cookie::with('category')->get();
+        $top3Cookies = $this->getTop3PopularCookies();
+
         return response()->json([
             'message'   =>  'Cookie List',
             'status'    =>  'success',
+            'top3Cookies' => $top3Cookies,
             'cookies'   =>  $cookies
         ]);
     }
@@ -59,7 +160,7 @@ class CookieController extends Controller
                 ->with('error', 'Validation failed')
                 ->withErrors($validator)
                 ->withInput();
-        }        
+        }
     
         $newCookie = new Cookie;
         $newCookie->title = $request->title;
