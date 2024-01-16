@@ -42,7 +42,7 @@ class AuthController extends Controller
     
             $token = JWTAuth::fromUser($user);
     
-            return response()->json(['token' => $token]);
+            return response()->json(['token' => $token], 200);
         } catch (ValidationException $e) {
             // Validation failed
             return response()->json(['error' => $e->errors()], 422);

@@ -16,6 +16,16 @@ class CookieController extends Controller
     {
         $this->redis = new Client();
     }
+   
+    /**
+     * Set the Predis client instance.
+     *
+     * @param \Predis\Client $redis
+     */
+    public function setRedis(Client $redis)
+    {
+        $this->redis = $redis;
+    }
 
     /**
      * Display a listing of the resource.
