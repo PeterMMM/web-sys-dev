@@ -11,15 +11,24 @@ class AuthTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    /** 
+     * @test
+     *  */
     public function user_can_register()
     {
+        //Arrange
+        $userName = 'John Doe';
+        $userEmail = 'john.doe@example.com';
+        $userPassword = 'password123';
+
+        //Act
         $response = $this->postJson('/api/register', [
-            'name' => 'John Doe',
-            'email' => 'john.doe@example.com',
-            'password' => 'password123',
+            'name' => $userName,
+            'email' => $userEmail,
+            'password' => $userPassword,
         ]);
 
+        //Assert
         $response->assertStatus(200)
             ->assertJsonStructure(['token']);
     }
@@ -27,17 +36,21 @@ class AuthTest extends TestCase
     /** @test */
     public function user_can_login()
     {
-        // Assuming you have a user in the database
+        //Arrange
         $user = User::factory()->create([
             'email' => 'john.doe@example.com',
             'password' => bcrypt('password123'),
         ]);
+        $userEmail = 'john.doe@example.com';
+        $userPassword = 'password123';
 
+        //Act
         $response = $this->postJson('/api/login', [
-            'email' => 'john.doe@example.com',
-            'password' => 'password123',
+            'email' => $userEmail,
+            'password' => $userPassword,
         ]);
 
+        //Assert
         $response->assertStatus(200)
             ->assertJsonStructure(['token']);
     }

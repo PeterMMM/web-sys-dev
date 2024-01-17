@@ -14,16 +14,18 @@ class CookieControllerTest extends TestCase
    /** @test */
    public function it_can_store_a_new_cookie()
    {
+        //Arrange
        $cookieController = new CookieController();
-
        $data = [
            'title' => 'Test Cookie',
            'description' => 'Test Description',
        ];
 
+       //Act
        $response = $cookieController->store(new \Illuminate\Http\Request($data));
     //    dump("Response / Create : {$response->getStatusCode()}");
 
+       //Assert
        $this->assertEquals(302, $response->getStatusCode()); 
        
        $this->assertDatabaseHas('cookies', $data);

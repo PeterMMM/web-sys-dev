@@ -146,7 +146,7 @@ class CookieController extends Controller
             'status'    =>  'success',
             'top3Cookies' => $top3Cookies,
             'cookies'   =>  $cookies
-        ]);
+        ],200);
     }
 
     /**

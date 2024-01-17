@@ -14,6 +14,7 @@ class CookieTest extends TestCase
     /** @test */
     public function authenticated_user_can_access_cookies_route()
     {
+        //Arrange
         // Assuming you have a user in the database
         $user = User::factory()->create([
             'email' => 'john.doe@example.com',
@@ -22,6 +23,7 @@ class CookieTest extends TestCase
         
         // dump("User ID: {$user->id}, Email: {$user->email}, User: {$user}");
 
+        //Act
         $response = $this->postJson('/api/login', [
             'email' => 'john.doe@example.com',
             'password' => 'password123',
@@ -33,7 +35,7 @@ class CookieTest extends TestCase
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)->get('/api/cookies');
         
         // dump("Response Content: {$response->content()}");
-
+        //Assert
         $response->assertStatus(200)
             ->assertJsonStructure(['message', 'status', 'top3Cookies', 'cookies']);
     }
